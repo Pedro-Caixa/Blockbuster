@@ -1,0 +1,13 @@
+{
+    "Entities": {
+        "DefaultCube": {
+            "EntityDescription": "Default Cube Entity",
+            "EntityHealth": 0,
+            "EntityMaxHealth": 0,
+            "EntityLevel": 0,
+            "EntityExperience": 0,
+            "EntityMaxExperience": 0,
+            "isFriendly": false
+        }
+    }
+}
