@@ -11,6 +11,7 @@ interface EntityData {
 	EntityExperience: number;
 	EntityMaxExperience: number;
 	isFriendly: boolean;
+	Damage?: number;
 }
 
 interface EntitiesJSON {
@@ -28,6 +29,7 @@ interface Attributes {
 	EntityExperience: number;
 	EntityMaxExperience: number;
 	isFriendly: boolean;
+	Damage?: number;
 }
 
 const entitiesData = Entities as unknown as EntitiesJSON;
@@ -44,6 +46,7 @@ const entitiesData = Entities as unknown as EntitiesJSON;
 		EntityExperience: 0,
 		EntityMaxExperience: 0,
 		isFriendly: false,
+		Damage: 0,
 	},
 	tag: "Entity",
 })
@@ -56,26 +59,94 @@ export class Entity extends BaseComponent<Attributes> implements OnStart {
 			if (entityName) {
 				const entityData = entitiesData.Entities[entityName];
 				if (entityData) {
-					const keys: (keyof EntityData)[] = [
-						"EntityDescription",
-						"EntityHealth",
-						"EntityMaxHealth",
-						"EntityLevel",
-						"EntityExperience",
-						"EntityMaxExperience",
-						"isFriendly",
-					];
-					for (const key of keys) {
-						this.attributes[key] = entityData[key];
+					this.loadAttributes(entityData);
+
+					if (!entityData.isFriendly && entityData.Damage !== undefined) {
+						this.attributes.Damage = entityData.Damage;
 					}
 				} else {
 					error(`Entity data for ${entityName} not found in Entities JSON.`);
 				}
 			} else {
-				error("EntityName is not defined, no attribution was made");
+				error("EntityName is not defined, no attribution was made.");
 			}
 		} else {
 			error("Entity component must be attached to a Part or BasePart instance.");
 		}
+	}
+
+	private loadAttributes(entityData: EntityData): void {
+		this.attributes.EntityDescription = entityData.EntityDescription;
+		this.attributes.EntityHealth = entityData.EntityHealth;
+		this.attributes.EntityMaxHealth = entityData.EntityMaxHealth;
+		this.attributes.EntityLevel = entityData.EntityLevel;
+		this.attributes.EntityExperience = entityData.EntityExperience;
+		this.attributes.EntityMaxExperience = entityData.EntityMaxExperience;
+		this.attributes.isFriendly = entityData.isFriendly;
+	}
+
+	private setAttribute<T extends keyof Attributes>(key: T, value: Attributes[T]): void {
+		this.attributes[key] = value;
+	}
+
+	public getEntityHealth(): number {
+		return this.attributes.EntityHealth;
+	}
+
+	public setEntityHealth(health: number): void {
+		this.setAttribute("EntityHealth", math.min(health, this.attributes.EntityMaxHealth));
+		if (this.attributes.EntityHealth <= 0) {
+			this.deathFunction();
+		}
+	}
+
+	public getDamage(): number {
+		return this.attributes.Damage ?? 0;
+	}
+
+	public setDamage(damage: number): void {
+		this.setAttribute("Damage", damage);
+	}
+
+	public getEntityMaxHealth(): number {
+		return this.attributes.EntityMaxHealth;
+	}
+
+	public setEntityMaxHealth(maxHealth: number): void {
+		this.setAttribute("EntityMaxHealth", maxHealth);
+	}
+
+	public getEntityLevel(): number {
+		return this.attributes.EntityLevel;
+	}
+
+	public setEntityLevel(level: number): void {
+		this.setAttribute("EntityLevel", level);
+	}
+
+	public getEntityExperience(): number {
+		return this.attributes.EntityExperience;
+	}
+
+	public setEntityExperience(experience: number): void {
+		this.setAttribute("EntityExperience", math.min(experience, this.attributes.EntityMaxExperience));
+	}
+
+	public getEntityMaxExperience(): number {
+		return this.attributes.EntityMaxExperience;
+	}
+
+	public setEntityMaxExperience(maxExperience: number): void {
+		this.setAttribute("EntityMaxExperience", maxExperience);
+	}
+
+	public getEntityData(): Attributes {
+		return this.attributes;
+	}
+
+	private deathFunction(): void {
+		print(`${this.attributes.EntityName} has died.`);
+		this.instance.Destroy();
+		this.destroy();
 	}
 }
